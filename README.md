@@ -29,6 +29,8 @@ Every run writes a cost table to the job summary from Claude Code's result event
 
 ## The one thing every caller must declare
 
+Both jobs of a caller check out this repository, which is private, so the `resolve` job's checkout also needs `token: ${{ secrets.SDLC_CONTEXT_TOKEN }}`. The examples do.
+
 The reusable workflow needs `contents: write`, `pull-requests: write`, `issues: write` and `id-token: write` on the job that calls it. A repository's default token is read-only, and GitHub refuses the call at startup if the caller does not grant them. The examples do.
 
 ## What the person still does
