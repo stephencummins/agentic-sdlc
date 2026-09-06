@@ -22,14 +22,12 @@ Stage prompts are in `stages/`. They are generic. Anything that names a customer
 
 1. Copy `examples/caller-governance.yml` into the repository that holds the artefacts, and `examples/caller-code.yml` into the code repository, under `.github/workflows/`. If both are one repository, one caller with both branches of the `if` is enough.
 2. Add one model credential as a repository secret: `CLAUDE_CODE_OAUTH_TOKEN` from `claude setup-token` (Pro or Max), or `ANTHROPIC_API_KEY`.
-3. Add `SDLC_CONTEXT_TOKEN` to each calling repository: a fine-grained personal access token with **Contents: read** on this repository (it is private, so the stage prompts cannot be fetched with the default token) and on the governance repository if `plan.md` lives there. Making this repository public removes the first need.
+3. If `plan.md` lives in a different private repository from the code, add `SDLC_CONTEXT_TOKEN` to the code repository: a fine-grained personal access token with **Contents: read** on that governance repository. This repository is public, so its stage prompts need no token.
 4. Start the chain by hand once: run the caller with `workflow_dispatch`, `dry_run` on, and read the prompt in the job summary. Then run it for real.
 
 Every run writes a cost table to the job summary from Claude Code's result event: turns, duration, tokens, dollars at API list rates.
 
 ## The one thing every caller must declare
-
-Both jobs of a caller check out this repository, which is private, so the `resolve` job's checkout also needs `token: ${{ secrets.SDLC_CONTEXT_TOKEN }}`. The examples do.
 
 The reusable workflow needs `contents: write`, `pull-requests: write`, `issues: write` and `id-token: write` on the job that calls it. A repository's default token is read-only, and GitHub refuses the call at startup if the caller does not grant them. The examples do.
 

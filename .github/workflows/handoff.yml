@@ -57,7 +57,7 @@ jobs:
         with:
           repository: stephencummins/agentic-sdlc
           path: .sdlc
-          token: ${{ secrets.SDLC_CONTEXT_TOKEN || github.token }}  # default token suffices only when this repo is public or the caller is this repo
+          token: ${{ secrets.SDLC_CONTEXT_TOKEN || github.token }}  # this repo is public, so the default token is enough
 
       - name: Check out the governance context (optional)
         if: inputs.context_repo != ''

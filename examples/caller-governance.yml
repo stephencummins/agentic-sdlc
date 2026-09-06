@@ -22,7 +22,6 @@ jobs:
         with:
           repository: stephencummins/agentic-sdlc
           path: .sdlc
-          token: ${{ secrets.SDLC_CONTEXT_TOKEN }}  # agentic-sdlc is private; the default token cannot read it
       - id: pick
         env:
           MERGED_BRANCH: ${{ github.event.pull_request.head.ref }}
