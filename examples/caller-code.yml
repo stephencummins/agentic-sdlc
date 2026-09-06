@@ -21,14 +21,21 @@ jobs:
       - uses: actions/checkout@v4
         with: { repository: stephencummins/agentic-sdlc, path: .sdlc }
       - id: pick
+        env:
+          MERGED_BRANCH: ${{ github.event.pull_request.head.ref }}
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "change=${{ inputs.change }}" >> "$GITHUB_OUTPUT"; echo "next=build-${{ inputs.step }}" >> "$GITHUB_OUTPUT"
           else
-            .sdlc/scripts/next_stage.sh "${{ github.event.pull_request.head.ref }}" | tee -a "$GITHUB_OUTPUT"
+            .sdlc/scripts/next_stage.sh "$MERGED_BRANCH" | tee -a "$GITHUB_OUTPUT"
           fi
   stage:
     needs: resolve
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      id-token: write
     if: startsWith(needs.resolve.outputs.next, 'build-')
     uses: stephencummins/agentic-sdlc/.github/workflows/handoff.yml@main
     with:

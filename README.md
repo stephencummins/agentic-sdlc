@@ -27,6 +27,10 @@ Stage prompts are in `stages/`. They are generic. Anything that names a customer
 
 Every run writes a cost table to the job summary from Claude Code's result event: turns, duration, tokens, dollars at API list rates.
 
+## The one thing every caller must declare
+
+The reusable workflow needs `contents: write`, `pull-requests: write`, `issues: write` and `id-token: write` on the job that calls it. A repository's default token is read-only, and GitHub refuses the call at startup if the caller does not grant them. The examples do.
+
 ## What the person still does
 
 Read the pull request. Merge it or edit it. That is the gate, and it is the only step on the critical path.

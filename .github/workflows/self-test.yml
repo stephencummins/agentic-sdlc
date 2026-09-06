@@ -15,9 +15,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - id: next
-        run: scripts/next_stage.sh "${{ inputs.merged_branch }}" | tee -a "$GITHUB_OUTPUT"
+        env:
+          MERGED_BRANCH: ${{ inputs.merged_branch }}
+        run: scripts/next_stage.sh "$MERGED_BRANCH" | tee -a "$GITHUB_OUTPUT"
   stage:
     needs: resolve
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      id-token: write
     if: needs.resolve.outputs.next != 'none'
     uses: ./.github/workflows/handoff.yml
     with:
