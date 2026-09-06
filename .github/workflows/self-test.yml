@@ -13,7 +13,7 @@ jobs:
       change: ${{ steps.next.outputs.change }}
       next: ${{ steps.next.outputs.next }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - id: next
         env:
           MERGED_BRANCH: ${{ inputs.merged_branch }}
