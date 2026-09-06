@@ -143,7 +143,12 @@ jobs:
 
       - name: Sandbox prerequisites for Claude Code on Linux
         if: ${{ !inputs.dry_run }}
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq bubblewrap socat >/dev/null
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq bubblewrap socat >/dev/null
+          # Ubuntu 24.04 runners block unprivileged user namespaces via AppArmor, which bubblewrap needs.
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 || true
+          sudo sysctl -w kernel.unprivileged_userns_clone=1 2>/dev/null || true
+          bwrap --ro-bind / / --unshare-net --dev /dev --proc /proc true && echo "bubblewrap works with a network namespace" || echo "::warning::bubblewrap cannot create a network namespace on this runner"
 
       - name: Run the stage
         if: ${{ !inputs.dry_run }}
