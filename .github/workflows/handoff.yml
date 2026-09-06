@@ -123,7 +123,7 @@ jobs:
             case "$OAUTH" in
               sk-ant-oat*) echo "CLAUDE_CODE_OAUTH_TOKEN: present, ${#OAUTH} chars, Claude OAuth prefix: yes" ;;
               github_pat_*|ghp_*) echo "::error::CLAUDE_CODE_OAUTH_TOKEN holds a GitHub token, not a Claude token"; exit 1 ;;
-              *) echo "::warning::CLAUDE_CODE_OAUTH_TOKEN: present, ${#OAUTH} chars, but no sk-ant-oat prefix" ;;
+              *) echo "::error::CLAUDE_CODE_OAUTH_TOKEN: present, ${#OAUTH} chars, but no sk-ant-oat prefix. Run 'claude setup-token' and store what it prints, unaltered."; exit 1 ;;
             esac
           elif [ -n "$APIKEY" ]; then
             case "$APIKEY" in sk-ant-*) echo "ANTHROPIC_API_KEY: present, ${#APIKEY} chars, Anthropic prefix: yes" ;; *) echo "::warning::ANTHROPIC_API_KEY present but no sk-ant prefix" ;; esac
