@@ -1,0 +1,246 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Agentic SDLC: a merge is the handoff",
+    "quality_profile": "showcase"
+  },
+  "lanes": [
+    {
+      "id": "person",
+      "label": "Named person"
+    },
+    {
+      "id": "actions",
+      "label": "GitHub Actions"
+    },
+    {
+      "id": "gov",
+      "label": "Governance repo"
+    },
+    {
+      "id": "code",
+      "label": "Code repo"
+    }
+  ],
+  "phases": [
+    {
+      "id": "accept",
+      "label": "Accept",
+      "fromCol": 0,
+      "toCol": 1,
+      "variant": "security"
+    },
+    {
+      "id": "handoff",
+      "label": "Hand off",
+      "fromCol": 2,
+      "toCol": 3,
+      "variant": "emphasis"
+    },
+    {
+      "id": "draft",
+      "label": "Draft",
+      "fromCol": 4,
+      "toCol": 5,
+      "variant": "dashed"
+    }
+  ],
+  "mainPath": [
+    "read",
+    "merge",
+    "resolve",
+    "handoff",
+    "claude",
+    "pr"
+  ],
+  "nodes": [
+    {
+      "id": "read",
+      "lane": "person",
+      "col": 0,
+      "type": "security",
+      "label": "Read the PR",
+      "sublabel": "the only gate",
+      "width": 132
+    },
+    {
+      "id": "merge",
+      "lane": "person",
+      "col": 1,
+      "type": "security",
+      "label": "Merge",
+      "sublabel": "acceptance of record",
+      "tag": "human only",
+      "width": 132
+    },
+    {
+      "id": "resolve",
+      "lane": "actions",
+      "col": 2,
+      "type": "backend",
+      "label": "Resolve stage",
+      "sublabel": "next_stage.sh",
+      "width": 132
+    },
+    {
+      "id": "handoff",
+      "lane": "actions",
+      "col": 3,
+      "type": "backend",
+      "label": "Handoff job",
+      "sublabel": "reusable workflow",
+      "tag": "agentic-sdlc",
+      "width": 132
+    },
+    {
+      "id": "claude",
+      "lane": "actions",
+      "col": 4,
+      "type": "backend",
+      "label": "Claude Code",
+      "sublabel": "fixed tool list",
+      "width": 132
+    },
+    {
+      "id": "pr",
+      "lane": "person",
+      "col": 5,
+      "type": "messagebus",
+      "label": "Open one PR",
+      "sublabel": "then stop",
+      "width": 132
+    },
+    {
+      "id": "chain",
+      "lane": "gov",
+      "col": 3,
+      "type": "database",
+      "label": "Artefact chain",
+      "sublabel": "intent to plan.md",
+      "width": 132
+    },
+    {
+      "id": "gate",
+      "lane": "gov",
+      "col": 4,
+      "type": "database",
+      "label": "Next gate",
+      "sublabel": "assessment/spec/plan",
+      "width": 132
+    },
+    {
+      "id": "build",
+      "lane": "code",
+      "col": 4,
+      "type": "backend",
+      "label": "Build step N",
+      "sublabel": "from plan.md",
+      "width": 132
+    },
+    {
+      "id": "summary",
+      "lane": "code",
+      "col": 5,
+      "type": "cloud",
+      "label": "Job summary",
+      "sublabel": "tokens and cost",
+      "width": 132
+    }
+  ],
+  "edges": [
+    {
+      "id": "read-merge",
+      "from": "read",
+      "to": "merge",
+      "variant": "security",
+      "label": "accepts"
+    },
+    {
+      "id": "merge-resolve",
+      "from": "merge",
+      "to": "resolve",
+      "label": "merged branch",
+      "variant": "emphasis"
+    },
+    {
+      "id": "resolve-handoff",
+      "from": "resolve",
+      "to": "handoff",
+      "label": "next stage",
+      "variant": "default"
+    },
+    {
+      "id": "handoff-claude",
+      "from": "handoff",
+      "to": "claude",
+      "label": "prompt + rules",
+      "variant": "emphasis"
+    },
+    {
+      "id": "claude-pr",
+      "from": "claude",
+      "to": "pr",
+      "variant": "default"
+    },
+    {
+      "id": "pr-read",
+      "from": "pr",
+      "to": "read",
+      "label": "next gate",
+      "variant": "emphasis",
+      "role": "return",
+      "fromSide": "top",
+      "toSide": "top"
+    },
+    {
+      "id": "handoff-chain",
+      "from": "handoff",
+      "to": "chain",
+      "label": "checks out",
+      "variant": "dashed"
+    },
+    {
+      "id": "claude-gate",
+      "from": "claude",
+      "to": "gate",
+      "label": "drafts",
+      "variant": "default",
+      "role": "branch"
+    },
+    {
+      "id": "claude-build",
+      "from": "claude",
+      "to": "build",
+      "label": "or builds",
+      "variant": "default",
+      "role": "branch"
+    },
+    {
+      "id": "claude-summary",
+      "from": "claude",
+      "to": "summary",
+      "label": "cost table",
+      "variant": "dashed",
+      "role": "async"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "rose",
+      "title": "What triggers a stage",
+      "items": [
+        "A merge by a named person, nothing else",
+        "Branch <change>-<stage> maps to the stage after it"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "What the job may do",
+      "items": [
+        "Draft on a branch, run tests, open one pull request",
+        "Never merge, tag, deploy or approve"
+      ]
+    }
+  ]
+}

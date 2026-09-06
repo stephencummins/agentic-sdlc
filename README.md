@@ -6,6 +6,10 @@ It exists because the same chain run through an orchestration console took an ev
 
 ## The chain
 
+![A merge is the handoff: read the PR, merge, resolve the next stage, run the handoff job, Claude Code drafts, one PR opens, back to the person](docs/handoff.png)
+
+Interactive version: [docs/handoff.html](docs/handoff.html), drawn from [docs/handoff.workflow.json](docs/handoff.workflow.json) with [archify](https://github.com/tt-a1i/archify).
+
 | Gate | Branch that merges | Stage that starts | Artefact |
 |---|---|---|---|
 | 1 Plan | `<change>-intent` | assessment | `ai-risk-assessment.md` |
