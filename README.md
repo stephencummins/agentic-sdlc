@@ -33,6 +33,16 @@ Both jobs of a caller check out this repository, which is private, so the `resol
 
 The reusable workflow needs `contents: write`, `pull-requests: write`, `issues: write` and `id-token: write` on the job that calls it. A repository's default token is read-only, and GitHub refuses the call at startup if the caller does not grant them. The examples do.
 
+## Proven on 6 September 2026
+
+Both callers ran for real. The governance stage read `plan.md`, judged Gate 4 already done, opened nothing, and took 20 seconds. The build stage read `plan.md` from the governance repository, found step 1 already merged, opened nothing, and took 52 seconds. That is the designed behaviour for work that already exists.
+
+Three things had to be true first, and each cost a failed run to learn:
+
+- A secret pasted from a terminal can carry a line break inside it. The handoff strips whitespace from the model credential and masks the result.
+- `gh secret set` with nothing on stdin stores an empty secret that still appears in the listing. Set secrets from a real terminal and paste at its prompt.
+- A repository that enforces Claude Code's sandbox (`failIfUnavailable: true`) needs unprivileged user namespaces on the runner. Ubuntu 24.04 blocks them through AppArmor; the handoff relaxes that and proves `bwrap` can create a network namespace before the stage runs. The sandbox itself stays on.
+
 ## What the person still does
 
 Read the pull request. Merge it or edit it. That is the gate, and it is the only step on the critical path.
