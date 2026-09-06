@@ -113,6 +113,24 @@ jobs:
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Check the model credential is the right kind (prints no secret)
+        if: ${{ !inputs.dry_run }}
+        env:
+          OAUTH: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          APIKEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          if [ -n "$OAUTH" ]; then
+            case "$OAUTH" in
+              sk-ant-oat*) echo "CLAUDE_CODE_OAUTH_TOKEN: present, ${#OAUTH} chars, Claude OAuth prefix: yes" ;;
+              github_pat_*|ghp_*) echo "::error::CLAUDE_CODE_OAUTH_TOKEN holds a GitHub token, not a Claude token"; exit 1 ;;
+              *) echo "::warning::CLAUDE_CODE_OAUTH_TOKEN: present, ${#OAUTH} chars, but no sk-ant-oat prefix" ;;
+            esac
+          elif [ -n "$APIKEY" ]; then
+            case "$APIKEY" in sk-ant-*) echo "ANTHROPIC_API_KEY: present, ${#APIKEY} chars, Anthropic prefix: yes" ;; *) echo "::warning::ANTHROPIC_API_KEY present but no sk-ant prefix" ;; esac
+          else
+            echo "::error::No model credential: set CLAUDE_CODE_OAUTH_TOKEN or ANTHROPIC_API_KEY"; exit 1
+          fi
+
       - name: Sandbox prerequisites for Claude Code on Linux
         if: ${{ !inputs.dry_run }}
         run: sudo apt-get update -qq && sudo apt-get install -y -qq bubblewrap socat >/dev/null
@@ -127,6 +145,7 @@ jobs:
           prompt: ${{ steps.prompt.outputs.text }}
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          show_full_output: true
           claude_args: |
             --max-turns ${{ inputs.max_turns }}
             --allowedTools "Read,Write,Edit,MultiEdit,Glob,Grep,LS,Bash(git:*),Bash(gh pr create:*),Bash(gh pr view:*),Bash(gh pr list:*),Bash(python:*),Bash(python3:*),Bash(pytest:*),Bash(ls:*),Bash(cat:*),Bash(sed:*),Bash(grep:*)"
