@@ -9,4 +9,6 @@ Sections:
 4. **Out of scope** — what this deliberately does not do.
 5. **Proof** — how each criterion will be shown to hold: test, fixture, manual check, or measurement.
 
+**If `spec.md` already exists:** add the new acceptance criteria with the next numbers, each traceable to the new decisions in `intent.md`. Add or amend only the interfaces the change touches. Add the new criteria's proof lines. If an existing criterion is superseded, mark it superseded and say by which; do not delete or renumber.
+
 Pull request title: `Gate 3: spec for <change>`.

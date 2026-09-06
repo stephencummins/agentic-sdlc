@@ -10,4 +10,6 @@ Sections:
 5. **Decisions** — numbered; append-only from here on.
 6. **Open questions** — numbered.
 
+**If `intent.md` already exists:** append to it. Add the change's scope lines under **Scope**, one or more numbered **Decisions** with the next numbers, and any new **Open questions**. Leave the problem statement and earlier decisions untouched.
+
 Pull request title: `Gate 1: intent for <change>`.

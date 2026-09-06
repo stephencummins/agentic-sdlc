@@ -10,4 +10,6 @@ Sections:
 5. **Out of scope** — what the plan deliberately leaves out.
 6. **Concerns** — numbered: anything in the earlier artefacts that looks wrong or inconsistent.
 
+**If `plan.md` already exists:** append the new build steps under **Order of work** with the next numbers, so that step N+1 is always the next unbuilt step. Add only the risks, proof and concerns the change introduces. Mark a superseded step as superseded rather than removing it, because build-N runs are resolved by number.
+
 Pull request title: `Gate 4: plan for <change>`.

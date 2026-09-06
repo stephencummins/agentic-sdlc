@@ -20,7 +20,7 @@ Interactive version: [docs/handoff.html](docs/handoff.html), drawn from [docs/ha
 | 5 Test | every pull request | your existing test workflow | checks |
 | 6 Deploy | the person who merges | | |
 
-Stage prompts are in `stages/`. They are generic. Anything that names a customer, a tenant or a person belongs in the repository the chain runs in, not here.
+Stage prompts are in `stages/`. They are generic, and each one says what to do when its artefact already exists: amend with the next numbers, never rewrite or renumber. The assessment stage classifies a change against the envelope and, when nothing stretches it, records a one-line change-log entry so the chain continues without a reassessment. Anything that names a customer, a tenant or a person belongs in the repository the chain runs in, not here.
 
 ## Use it
 
