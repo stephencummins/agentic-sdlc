@@ -51,3 +51,7 @@ Read the pull request. Merge it or edit it. That is the gate, and it is the only
 - The handoff from a merged `plan.md` in the governance repository to `build-1` in the code repository crosses repositories. Start it by hand with `workflow_dispatch` on the code repository's caller (step 1), or add a `repository_dispatch` with a token if you want it automatic.
 - The agent's tool list is fixed in `handoff.yml`. The calling repository's `.claude/settings.json` deny rules also apply, and they win.
 - Stages run one at a time. Speculative drafting of stage N+1 from the unmerged branch of stage N is a small change to the caller (base the checkout on the PR branch) and is deliberately not the default.
+
+## Licence
+
+Apache License 2.0. See `LICENSE`. Copyright 2026 Stephen Cummins.
