@@ -113,23 +113,33 @@ jobs:
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Check the model credential is the right kind (prints no secret)
+      - name: Check and clean the model credential (prints no secret)
+        id: cred
         if: ${{ !inputs.dry_run }}
         env:
           OAUTH: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           APIKEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
-          if [ -n "$OAUTH" ]; then
-            case "$OAUTH" in
-              sk-ant-oat*) echo "CLAUDE_CODE_OAUTH_TOKEN: present, ${#OAUTH} chars, Claude OAuth prefix: yes" ;;
+          # Tokens pasted from a terminal often carry a line break or a space. Strip all whitespace,
+          # mask the cleaned value so it can never appear in a log, and hand it on as a step output.
+          clean() { printf '%s' "$1" | tr -d '[:space:]'; }
+          o=$(clean "$OAUTH"); k=$(clean "$APIKEY")
+          [ -n "$o" ] && echo "::add-mask::$o"
+          [ -n "$k" ] && echo "::add-mask::$k"
+          ws=$(( ${#OAUTH} - ${#o} + ${#APIKEY} - ${#k} ))
+          [ "$ws" -gt 0 ] && echo "::notice::Removed $ws whitespace character(s) from the model credential"
+          if [ -n "$o" ]; then
+            case "$o" in
+              sk-ant-oat*) echo "CLAUDE_CODE_OAUTH_TOKEN: ${#o} chars after cleaning, Claude OAuth prefix: yes" ;;
               github_pat_*|ghp_*) echo "::error::CLAUDE_CODE_OAUTH_TOKEN holds a GitHub token, not a Claude token"; exit 1 ;;
-              *) echo "::error::CLAUDE_CODE_OAUTH_TOKEN: present, ${#OAUTH} chars, but no sk-ant-oat prefix. Run 'claude setup-token' and store what it prints, unaltered."; exit 1 ;;
+              *) echo "::error::CLAUDE_CODE_OAUTH_TOKEN: ${#o} chars, no sk-ant-oat prefix. Run 'claude setup-token' and store what it prints."; exit 1 ;;
             esac
-          elif [ -n "$APIKEY" ]; then
-            case "$APIKEY" in sk-ant-*) echo "ANTHROPIC_API_KEY: present, ${#APIKEY} chars, Anthropic prefix: yes" ;; *) echo "::warning::ANTHROPIC_API_KEY present but no sk-ant prefix" ;; esac
+          elif [ -n "$k" ]; then
+            case "$k" in sk-ant-*) echo "ANTHROPIC_API_KEY: ${#k} chars, Anthropic prefix: yes" ;; *) echo "::error::ANTHROPIC_API_KEY has no sk-ant prefix"; exit 1 ;; esac
           else
             echo "::error::No model credential: set CLAUDE_CODE_OAUTH_TOKEN or ANTHROPIC_API_KEY"; exit 1
           fi
+          { echo "oauth=$o"; echo "apikey=$k"; } >> "$GITHUB_OUTPUT"
 
       - name: Sandbox prerequisites for Claude Code on Linux
         if: ${{ !inputs.dry_run }}
@@ -143,8 +153,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         with:
           prompt: ${{ steps.prompt.outputs.text }}
-          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          claude_code_oauth_token: ${{ steps.cred.outputs.oauth }}
+          anthropic_api_key: ${{ steps.cred.outputs.apikey }}
           show_full_output: true
           claude_args: |
             --max-turns ${{ inputs.max_turns }}
