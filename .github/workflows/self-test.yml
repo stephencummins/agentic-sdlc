@@ -1,0 +1,27 @@
+name: Self-test (dry run)
+on:
+  workflow_dispatch:
+    inputs:
+      merged_branch:
+        description: "Pretend this branch just merged"
+        default: remapper-spec
+        required: true
+jobs:
+  resolve:
+    runs-on: ubuntu-latest
+    outputs:
+      change: ${{ steps.next.outputs.change }}
+      next: ${{ steps.next.outputs.next }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: next
+        run: scripts/next_stage.sh "${{ inputs.merged_branch }}" | tee -a "$GITHUB_OUTPUT"
+  stage:
+    needs: resolve
+    if: needs.resolve.outputs.next != 'none'
+    uses: ./.github/workflows/handoff.yml
+    with:
+      stage: ${{ needs.resolve.outputs.next }}
+      change: ${{ needs.resolve.outputs.change }}
+      dry_run: true
+    secrets: inherit

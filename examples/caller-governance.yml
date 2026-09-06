@@ -1,0 +1,39 @@
+# Put this in the repository that holds the artefact chain (intent, assessment, spec, plan).
+# When a stage branch merges, the next stage starts. A person still accepts every pull request.
+name: SDLC — next gate
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      stage: { description: "Stage to run", required: true, default: assessment }
+      change: { description: "Change id", required: true, default: remapper }
+      dry_run: { type: boolean, default: true }
+jobs:
+  resolve:
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    outputs:
+      change: ${{ steps.pick.outputs.change }}
+      next: ${{ steps.pick.outputs.next }}
+    steps:
+      - uses: actions/checkout@v4
+        with: { repository: stephencummins/agentic-sdlc, path: .sdlc }
+      - id: pick
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "change=${{ inputs.change }}" >> "$GITHUB_OUTPUT"; echo "next=${{ inputs.stage }}" >> "$GITHUB_OUTPUT"
+          else
+            .sdlc/scripts/next_stage.sh "${{ github.event.pull_request.head.ref }}" | tee -a "$GITHUB_OUTPUT"
+          fi
+  stage:
+    needs: resolve
+    # Gates 1–4 live here. A merged plan hands over to the code repository, which is a separate trigger (see README).
+    if: needs.resolve.outputs.next != 'none' && !startsWith(needs.resolve.outputs.next, 'build-')
+    uses: stephencummins/agentic-sdlc/.github/workflows/handoff.yml@main
+    with:
+      stage: ${{ needs.resolve.outputs.next }}
+      change: ${{ needs.resolve.outputs.change }}
+      dry_run: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run || false }}
+    secrets: inherit

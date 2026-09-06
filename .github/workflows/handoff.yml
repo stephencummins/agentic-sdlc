@@ -1,0 +1,161 @@
+name: SDLC handoff (reusable)
+
+# One stage of the seven-gate artefact chain, run as a job.
+# The caller decides WHICH stage (usually "the one after the branch that just merged").
+# Nothing here approves, merges or deploys. It drafts and opens a pull request.
+
+on:
+  workflow_call:
+    inputs:
+      stage:
+        description: "Stage to run: intent | assessment | spec | plan | build-<n>"
+        required: true
+        type: string
+      change:
+        description: "Change identifier used in branch names, e.g. remapper"
+        required: true
+        type: string
+      context_repo:
+        description: "Optional owner/repo whose main branch is checked out read-only into .sdlc-context (a separate governance repo holding plan.md)"
+        required: false
+        type: string
+        default: ""
+      max_turns:
+        required: false
+        type: number
+        default: 40
+      dry_run:
+        description: "Resolve and print the prompt, call no model"
+        required: false
+        type: boolean
+        default: false
+    secrets:
+      CLAUDE_CODE_OAUTH_TOKEN:
+        required: false
+      ANTHROPIC_API_KEY:
+        required: false
+      SDLC_CONTEXT_TOKEN:
+        required: false
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+  id-token: write
+
+jobs:
+  stage:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the calling repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check out the stage prompts
+        uses: actions/checkout@v4
+        with:
+          repository: stephencummins/agentic-sdlc
+          path: .sdlc
+          token: ${{ secrets.SDLC_CONTEXT_TOKEN || github.token }}  # default token suffices only when this repo is public or the caller is this repo
+
+      - name: Check out the governance context (optional)
+        if: inputs.context_repo != ''
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ inputs.context_repo }}
+          path: .sdlc-context
+          token: ${{ secrets.SDLC_CONTEXT_TOKEN }}
+
+      - name: Keep helper checkouts out of the commit
+        run: |
+          printf '.sdlc/\n.sdlc-context/\n' >> .git/info/exclude
+          git config user.name "sdlc-agent"
+          git config user.email "sdlc-agent@users.noreply.github.com"
+
+      - name: Assemble the prompt
+        id: prompt
+        env:
+          STAGE: ${{ inputs.stage }}
+          CHANGE: ${{ inputs.change }}
+        run: |
+          set -euo pipefail
+          case "$STAGE" in
+            build-*) file=.sdlc/stages/build.md; n="${STAGE#build-}" ;;
+            intent|assessment|spec|plan) file=".sdlc/stages/$STAGE.md"; n="" ;;
+            *) echo "unknown stage: $STAGE" >&2; exit 1 ;;
+          esac
+          branch="$CHANGE-$STAGE"
+          {
+            echo "Repository: ${GITHUB_REPOSITORY}. Change: ${CHANGE}. Stage: ${STAGE}. Branch to create and push: ${branch}."
+            [ -n "$n" ] && echo "N = $n."
+            echo
+            sed "s/<change>/${CHANGE}/g; s/step N/step ${n:-N}/g; s/Step N/Step ${n:-N}/g; s/no step N/no step ${n:-N}/g" "$file"
+            cat .sdlc/stages/_rules.md
+          } > .sdlc/prompt.md
+          echo "branch=$branch" >> "$GITHUB_OUTPUT"
+          {
+            echo "text<<PROMPT_EOF"
+            cat .sdlc/prompt.md
+            echo "PROMPT_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Dry run — show the prompt and stop
+        if: inputs.dry_run
+        run: |
+          {
+            echo "## Dry run: stage \`${{ inputs.stage }}\` for \`${{ inputs.change }}\`"
+            echo
+            echo "Branch that would be created: \`${{ steps.prompt.outputs.branch }}\`"
+            echo
+            echo '```'
+            cat .sdlc/prompt.md
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Sandbox prerequisites for Claude Code on Linux
+        if: ${{ !inputs.dry_run }}
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq bubblewrap socat >/dev/null
+
+      - name: Run the stage
+        if: ${{ !inputs.dry_run }}
+        id: claude
+        uses: anthropics/claude-code-action@v1
+        env:
+          GH_TOKEN: ${{ github.token }}
+        with:
+          prompt: ${{ steps.prompt.outputs.text }}
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          claude_args: |
+            --max-turns ${{ inputs.max_turns }}
+            --allowedTools "Read,Write,Edit,MultiEdit,Glob,Grep,LS,Bash(git:*),Bash(gh pr create:*),Bash(gh pr view:*),Bash(gh pr list:*),Bash(python:*),Bash(python3:*),Bash(pytest:*),Bash(ls:*),Bash(cat:*),Bash(sed:*),Bash(grep:*)"
+            --disallowedTools "WebFetch,WebSearch,Bash(gh pr merge:*),Bash(gh release:*),Bash(git push origin main:*),Bash(git tag:*)"
+
+      - name: Record what the run cost
+        if: ${{ !inputs.dry_run && always() && steps.claude.outputs.execution_file != '' }}
+        run: |
+          python3 - "${{ steps.claude.outputs.execution_file }}" <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json, sys
+          res = None
+          try:
+              data = json.load(open(sys.argv[1]))
+              events = data if isinstance(data, list) else data.get("events", [])
+              for e in events:
+                  if isinstance(e, dict) and e.get("type") == "result":
+                      res = e
+          except Exception as ex:
+              print(f"Could not read the execution log: {ex}"); sys.exit(0)
+          if not res:
+              print("No result event in the execution log."); sys.exit(0)
+          u = res.get("usage", {})
+          print("## Run cost")
+          print("| Measure | Value |\n|---|---|")
+          print(f"| Turns | {res.get('num_turns')} |")
+          print(f"| Duration | {round(res.get('duration_ms', 0)/60000, 1)} min |")
+          print(f"| Input tokens | {u.get('input_tokens', 0)} |")
+          print(f"| Cache write | {u.get('cache_creation_input_tokens', 0)} |")
+          print(f"| Cache read | {u.get('cache_read_input_tokens', 0)} |")
+          print(f"| Output | {u.get('output_tokens', 0)} |")
+          print(f"| Cost (API list) | ${res.get('total_cost_usd', 0):.2f} |")
+          PY

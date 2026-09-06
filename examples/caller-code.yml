@@ -1,0 +1,39 @@
+# Put this in the code repository. When build step N merges, step N+1 starts.
+# plan.md is read from the governance repository via SDLC_CONTEXT_TOKEN (read-only fine-grained PAT).
+name: SDLC — next build step
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      step: { description: "Build step number", required: true, default: "1" }
+      change: { description: "Change id", required: true, default: remapper }
+      dry_run: { type: boolean, default: true }
+jobs:
+  resolve:
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    outputs:
+      change: ${{ steps.pick.outputs.change }}
+      next: ${{ steps.pick.outputs.next }}
+    steps:
+      - uses: actions/checkout@v4
+        with: { repository: stephencummins/agentic-sdlc, path: .sdlc }
+      - id: pick
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "change=${{ inputs.change }}" >> "$GITHUB_OUTPUT"; echo "next=build-${{ inputs.step }}" >> "$GITHUB_OUTPUT"
+          else
+            .sdlc/scripts/next_stage.sh "${{ github.event.pull_request.head.ref }}" | tee -a "$GITHUB_OUTPUT"
+          fi
+  stage:
+    needs: resolve
+    if: startsWith(needs.resolve.outputs.next, 'build-')
+    uses: stephencummins/agentic-sdlc/.github/workflows/handoff.yml@main
+    with:
+      stage: ${{ needs.resolve.outputs.next }}
+      change: ${{ needs.resolve.outputs.change }}
+      context_repo: stephencummins/remapper-governance
+      dry_run: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run || false }}
+    secrets: inherit
