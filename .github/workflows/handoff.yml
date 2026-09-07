@@ -192,4 +192,19 @@ jobs:
           print(f"| Cache read | {u.get('cache_read_input_tokens', 0)} |")
           print(f"| Output | {u.get('output_tokens', 0)} |")
           print(f"| Cost (API list) | ${res.get('total_cost_usd', 0):.2f} |")
+          # The same figures as a file, so a dashboard can read them through the artifacts API
+          # (the job summary is not reachable that way, and downloaded logs are truncated).
+          json.dump({"stage": "${{ inputs.stage }}", "change": "${{ inputs.change }}",
+                     "num_turns": res.get("num_turns"), "duration_ms": res.get("duration_ms"),
+                     "total_cost_usd": res.get("total_cost_usd"), "usage": u,
+                     "model": (res.get("modelUsage") and list(res["modelUsage"])[0]) or None},
+                    open("sdlc-result.json", "w"))
           PY
+
+      - name: Publish the run cost as an artifact
+        if: ${{ !inputs.dry_run && always() && hashFiles('sdlc-result.json') != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: sdlc-result
+          path: sdlc-result.json
+          retention-days: 90
