@@ -20,7 +20,7 @@ The agentic SDLC runs as a chain of seven gates in which an agent drafts each ar
 
 ## The chain
 
-![A merge is the handoff: read the PR, merge, resolve the next stage, run the handoff job, Claude Code drafts, one PR opens, back to the person](docs/handoff.png)
+![A merge is the handoff: read the PR, merge, resolve the next stage, run the handoff job, Claude Code amends the next gate or builds a step, a stretched axis becomes a reassessment, one PR opens, back to the person](docs/handoff.png)
 
 Interactive version: [docs/handoff.html](docs/handoff.html), drawn from [docs/handoff.workflow.json](docs/handoff.workflow.json) with [archify](https://github.com/tt-a1i/archify).
 

@@ -125,8 +125,8 @@
       "lane": "gov",
       "col": 4,
       "type": "database",
-      "label": "Next gate",
-      "sublabel": "assessment/spec/plan",
+      "label": "Amend gate 2\u20134",
+      "sublabel": "amend, next numbers",
       "width": 132
     },
     {
@@ -140,11 +140,21 @@
     },
     {
       "id": "summary",
-      "lane": "code",
+      "lane": "actions",
       "col": 5,
       "type": "cloud",
       "label": "Job summary",
       "sublabel": "tokens and cost",
+      "width": 132
+    },
+    {
+      "id": "reassess",
+      "lane": "gov",
+      "col": 5,
+      "type": "security",
+      "label": "Reassessment",
+      "sublabel": "an axis stretched",
+      "tag": "Gate 2 again",
       "width": 132
     }
   ],
@@ -223,6 +233,14 @@
       "label": "cost table",
       "variant": "dashed",
       "role": "async"
+    },
+    {
+      "id": "gate-reassess",
+      "from": "gate",
+      "to": "reassess",
+      "label": "envelope check",
+      "variant": "security",
+      "role": "error"
     }
   ],
   "cards": [
@@ -231,14 +249,14 @@
       "title": "What triggers a stage",
       "items": [
         "A merge by a named person, nothing else",
-        "Branch <change>-<stage> maps to the stage after it"
+        "Inside the envelope, Gate 2 adds one change-log line and the chain continues"
       ]
     },
     {
       "dot": "cyan",
       "title": "What the job may do",
       "items": [
-        "Draft on a branch, run tests, open one pull request",
+        "Amend with the next numbers, never rewrite or renumber",
         "Never merge, tag, deploy or approve"
       ]
     }
