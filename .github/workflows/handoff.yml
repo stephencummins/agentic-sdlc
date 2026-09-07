@@ -163,7 +163,7 @@ jobs:
           show_full_output: true
           claude_args: |
             --max-turns ${{ inputs.max_turns }}
-            --allowedTools "Read,Write,Edit,MultiEdit,Glob,Grep,LS,Bash(git:*),Bash(gh pr create:*),Bash(gh pr view:*),Bash(gh pr list:*),Bash(python:*),Bash(python3:*),Bash(pytest:*),Bash(ls:*),Bash(cat:*),Bash(sed:*),Bash(grep:*)"
+            --allowedTools "Read,Write,Edit,MultiEdit,Glob,Grep,LS,Bash(git:*),Bash(gh pr create:*),Bash(gh pr view:*),Bash(gh pr list:*),Bash(python:*),Bash(python3:*),Bash(pytest:*),Bash(ls:*),Bash(cat:*),Bash(sed:*),Bash(grep:*),Bash(find:*),Bash(mkdir:*),Bash(touch:*),Bash(cp:*),Bash(mv:*),Bash(rm:*),Bash(rmdir:*),Bash(head:*),Bash(tail:*),Bash(wc:*),Bash(diff:*),Bash(test:*),Bash(echo:*),Bash(printf:*),Bash(true:*)"
             --disallowedTools "WebFetch,WebSearch,Bash(gh pr merge:*),Bash(gh release:*),Bash(git push origin main:*),Bash(git tag:*)"
 
       - name: Record what the run cost

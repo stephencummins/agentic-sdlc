@@ -8,3 +8,5 @@
 - No real credentials, tenant names, customer identifiers or personal data may enter the repository unless they are already in it.
 - **If the artefact already exists, this is a change to an existing system: amend it, do not rewrite it.** Keep every accepted section and every existing number. Append new items with the next numbers. Mark a superseded item as superseded rather than deleting it. The pull request diff must show only what this change adds.
 - If there is genuinely nothing to add, or a precondition is missing, open no pull request. Print one line saying why and exit.
+- **One command per Bash call. Never chain with `&&`, `;` or `|` across commands.** The repository may deny individual commands; a chain that contains one denied command is refused whole, and you learn nothing about the rest.
+- Never edit `.gitignore`, `.gitattributes` or anything under `.claude/`. They are controls, not files. If something you need to commit is ignored, say so in the pull request under **Blocked** and put placeholder material where the repository already keeps its committed examples.
