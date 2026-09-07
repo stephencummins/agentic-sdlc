@@ -10,3 +10,4 @@
 - If there is genuinely nothing to add, or a precondition is missing, open no pull request. Print one line saying why and exit.
 - **One command per Bash call. Never chain with `&&`, `;` or `|` across commands.** The repository may deny individual commands; a chain that contains one denied command is refused whole, and you learn nothing about the rest.
 - Never edit `.gitignore`, `.gitattributes` or anything under `.claude/`. They are controls, not files. If something you need to commit is ignored, say so in the pull request under **Blocked** and put placeholder material where the repository already keeps its committed examples.
+- **Create the branch, commit and push as soon as the first real file exists, then commit and push after each coherent piece of work.** A run can be cut off by its turn budget; work that is not pushed is lost, and work that is pushed can be resumed. Open the pull request only when the step is complete.

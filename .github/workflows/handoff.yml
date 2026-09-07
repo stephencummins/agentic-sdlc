@@ -23,7 +23,7 @@ on:
       max_turns:
         required: false
         type: number
-        default: 40
+        default: 100
       dry_run:
         description: "Resolve and print the prompt, call no model"
         required: false
