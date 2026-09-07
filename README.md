@@ -4,6 +4,20 @@ The seven-gate artefact chain as GitHub Actions. An agent drafts each stage and 
 
 It exists because the same chain run through an orchestration console took an evening of which four fifths was a person waking agents by hand. Here the handoff is the merge event.
 
+## The process in one paragraph
+
+The agentic SDLC runs as a chain of seven gates in which an agent drafts each artefact and a named person accepts it by merging a pull request. The merge is the only trigger: a branch named `<change>-<stage>` merging into main starts the stage after it as a GitHub Actions job, which reads the earlier artefacts, drafts the next one on a new branch, opens one pull request, writes its token cost to the job summary, and stops. It can never merge, tag, deploy or approve. Gates 1 to 4 live in the governance repository, build steps in the code repository, and the risk assessment sets the envelope every later change is measured against.
+
+| Gate | Artefact | Drafted by | Accepted by | What starts next |
+|---|---|---|---|---|
+| 1 Plan | `intent.md` | Agent, or the person for a small change | Product owner | Assessment |
+| 2 Assess | `ai-risk-assessment.md`, which sets the envelope | Agent | Software Design Authority, plus Information Steward for client data | Spec, or a reassessment if an axis is stretched |
+| 3 Design | `spec.md` | Agent | Product owner | Plan |
+| 4 Build | `plan.md`, then one pull request per step | Agent | Engineer approves the plan, code owner merges each step | Next build step, by number |
+| 5 Test | Checks and findings | Pipeline | Nobody, findings inform | Nothing, runs on every PR |
+| 6 Deploy | Release authorisation | Person | Release manager | Operate |
+| 7 Operate | `bands.yaml`, new intent on drift | Agent watches | Service owner | Back to Gate 1 |
+
 ## The chain
 
 ![A merge is the handoff: read the PR, merge, resolve the next stage, run the handoff job, Claude Code drafts, one PR opens, back to the person](docs/handoff.png)
